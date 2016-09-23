@@ -11,6 +11,7 @@ import org.springframework.beans.factory.xml.ParserContext;
 import org.w3c.dom.Element;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 
 /**
@@ -68,12 +69,18 @@ public class ConfigurationBeanDefinitionParser extends AbstractSingleBeanDefinit
 
 
     private Properties loadProperties(String configFile) {
+        log.info("load origin config from file: {}", configFile);
+
         Properties prop = new Properties();
         try {
-            prop.load(ConfigurationBeanDefinitionParser.class.getClassLoader().getResourceAsStream(configFile));
+            InputStream in = ConfigurationBeanDefinitionParser.class.getClassLoader().getResourceAsStream(configFile);
+            if (in == null)
+                throw new IllegalArgumentException("cannot file origin config file: " + configFile);
+
+            prop.load(in);
         } catch (IOException e) {
             log.error("failed to load origin properties", e);
-            throw new IllegalArgumentException("failed to load origin properties", e);
+            throw new IllegalArgumentException("failed to load origin properties: " + configFile, e);
         }
 
         return prop;
