@@ -14,12 +14,32 @@ import static org.testng.Assert.assertNotNull;
 public class Cfg4jTest {
 
     @Test
-    public void testInitSpring() throws Exception {
-        ApplicationContext context = new ClassPathXmlApplicationContext("classpath:spring-config.xml");
+    public void testWithFileBackend() throws Exception {
+        System.setProperty("configFile", "app-file.properties"); // use app-file.properties as origin config
+
+        ApplicationContext context = new ClassPathXmlApplicationContext("classpath:spring-config-file.xml");
         ConfigurationProvider provider = context.getBean(ConfigurationProvider.class);
         assertNotNull(provider);
 
         final String key = "databasePool.url";
         assertEquals(context.getEnvironment().getProperty(key), provider.getProperty(key, String.class));
+
+        Dummy dummy = context.getBean(Dummy.class);
+        assertEquals(dummy.getName(), "hello");
+    }
+
+    @Test
+    public void testWithGitBackend() throws Exception {
+        System.setProperty("configFile", "app-git.properties"); // use app-file.properties as origin config
+
+        ApplicationContext context = new ClassPathXmlApplicationContext("classpath:spring-config-git.xml");
+        ConfigurationProvider provider = context.getBean(ConfigurationProvider.class);
+        assertNotNull(provider);
+
+        final String key = "databasePool.url";
+        assertEquals(context.getEnvironment().getProperty(key), provider.getProperty(key, String.class));
+
+        Dummy dummy = context.getBean(Dummy.class);
+        assertEquals(dummy.getName(), context.getEnvironment().getProperty(key));
     }
 }

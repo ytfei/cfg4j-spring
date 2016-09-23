@@ -4,6 +4,9 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
        http://codingme.com/cfg4j http://codingme.com/cfg4j/cfg4j.xsd">
 
-    <cfg4j:config id="hi" key="configFile"/>
+    <cfg4j:config id="cfg4j"/>
 
+    <bean class="cm.cfg4j.spring.Dummy">
+        <property name="name" value="${dummy.name}"/>
+    </bean>
 </beans>
