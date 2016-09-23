@@ -29,6 +29,11 @@ public class ProviderAwareConfigurationSource extends ConfigurationSourceWrapper
     @Override
     protected void afterReload() {
         log.info("configuration is reloaded");
-        Cfg4jPropertyPlaceholderConfigurer.__propertiesHolder.set(configurationProvider.allConfigurationAsProperties());
+
+        if (configurationProvider != null) {
+            log.debug("refresh Cfg4jPropertyPlaceholderConfigurer config source");
+            Cfg4jPropertyPlaceholderConfigurer.__propertiesHolder.set(configurationProvider.allConfigurationAsProperties());
+        }
+
     }
 }
