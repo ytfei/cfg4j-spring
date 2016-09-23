@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cfg4j="http://codingme.com/cfg4j"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://codingme.com/cfg4j http://codingme.com/cfg4j/cfg4j.xsd">
+
+    <cfg4j:config id="hi" key="configFile"/>
+
+</beans>
