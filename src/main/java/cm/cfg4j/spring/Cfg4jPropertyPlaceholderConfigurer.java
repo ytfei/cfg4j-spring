@@ -22,7 +22,7 @@ public class Cfg4jPropertyPlaceholderConfigurer extends PropertyPlaceholderConfi
 
     private final Logger log = LoggerFactory.getLogger(Cfg4jPropertyPlaceholderConfigurer.class);
 
-    static final AtomicReference<Properties> propertiesHolder = new AtomicReference<>();
+    public static final AtomicReference<Properties> __propertiesHolder = new AtomicReference<>();
 
     private Environment environment;
 
@@ -39,8 +39,9 @@ public class Cfg4jPropertyPlaceholderConfigurer extends PropertyPlaceholderConfi
     @Override
     public void afterPropertiesSet() throws Exception {
         Properties properties = configurationProvider.allConfigurationAsProperties();
-        propertiesHolder.set(properties);
+        __propertiesHolder.set(properties);
 
+        // 刷新后不需要再更新 placeholder 的属性值, 因为该值只在启动时才用到
         super.setProperties(properties);
 
         // 配置environment
@@ -49,7 +50,7 @@ public class Cfg4jPropertyPlaceholderConfigurer extends PropertyPlaceholderConfi
 
     private void configEnvironment() {
         if (environment != null && environment instanceof AbstractEnvironment) {
-            InternalPropertySource propertySource = new InternalPropertySource("internalPropertySourceForConfigurationProvider", propertiesHolder);
+            InternalPropertySource propertySource = new InternalPropertySource("internalPropertySourceForConfigurationProvider", __propertiesHolder);
             ((AbstractEnvironment) environment).getPropertySources().addFirst(propertySource);
         } else {
             log.warn("cannot update spring environment with values from ConfigurationProvider");
@@ -61,6 +62,9 @@ public class Cfg4jPropertyPlaceholderConfigurer extends PropertyPlaceholderConfi
         this.environment = environment;
     }
 
+    /**
+     * 使用最新的属性源来获取属性, 因为资源在 reload 后,会重置属性源. 为了保证 Environment 能够拿到最新的值, 故重写
+     */
     private class InternalPropertySource extends PropertySource<AtomicReference<Properties>> {
 
         InternalPropertySource(String name, AtomicReference<Properties> source) {
@@ -69,7 +73,7 @@ public class Cfg4jPropertyPlaceholderConfigurer extends PropertyPlaceholderConfi
 
         @Override
         public Object getProperty(String name) {
-            return propertiesHolder.get().getProperty(name);
+            return __propertiesHolder.get().getProperty(name);
         }
     }
 }

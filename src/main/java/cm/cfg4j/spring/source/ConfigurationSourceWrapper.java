@@ -1,4 +1,4 @@
-package cm.cfg4j.spring;
+package cm.cfg4j.spring.source;
 
 import org.cfg4j.source.ConfigurationSource;
 import org.cfg4j.source.context.environment.Environment;
