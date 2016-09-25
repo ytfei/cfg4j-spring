@@ -30,7 +30,7 @@ public class DatabaseConfigurationSource implements ConfigurationSource {
 
     private final AtomicReference<Map<String, Properties>> propertiesHolder = new AtomicReference<>();
 
-    private static final String SQL = "SELECT profile, key, value\n" +
+    private static final String SQL = "SELECT `profile`, `key`, `value` " +
         " FROM %s where project = ?";
 
     public DatabaseConfigurationSource(String driver, String url, String user, String password, String tableName, String project) {
@@ -67,7 +67,7 @@ public class DatabaseConfigurationSource implements ConfigurationSource {
             }
             rs.close();
         } catch (SQLException e) {
-            log.error("failed to execute sql", e);
+            throw new IllegalStateException("failed to execute sql", e);
         }
 
         propertiesHolder.set(propMap);

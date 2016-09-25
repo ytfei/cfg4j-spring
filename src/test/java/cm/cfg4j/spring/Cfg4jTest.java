@@ -42,4 +42,22 @@ public class Cfg4jTest {
         Dummy dummy = context.getBean(Dummy.class);
         assertEquals(dummy.getName(), context.getEnvironment().getProperty(key));
     }
+
+    @Test(enabled = false) // disable because require db config
+    public void testWithDatabaseBackend() throws Exception {
+        System.setProperty("configFile", "app-database.properties"); // use app-file.properties as origin config
+
+        ApplicationContext context = new ClassPathXmlApplicationContext("classpath:spring-config-database.xml");
+        ConfigurationProvider provider = context.getBean(ConfigurationProvider.class);
+        assertNotNull(provider);
+
+        final String key = "sample.key";
+        final String v = provider.getProperty(key, String.class);
+        assertEquals(v, "sample.value");
+
+        assertEquals(context.getEnvironment().getProperty(key), v);
+
+        Dummy dummy = context.getBean(Dummy.class);
+        assertEquals(dummy.getName(), v);
+    }
 }

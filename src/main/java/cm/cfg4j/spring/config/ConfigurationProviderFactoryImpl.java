@@ -1,5 +1,6 @@
 package cm.cfg4j.spring.config;
 
+import cm.cfg4j.spring.source.DatabaseConfigurationSource;
 import cm.cfg4j.spring.source.ProviderAwareConfigurationSource;
 import org.cfg4j.provider.ConfigurationProvider;
 import org.cfg4j.provider.ConfigurationProviderBuilder;
@@ -14,9 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
@@ -63,7 +61,9 @@ public class ConfigurationProviderFactoryImpl implements ConfigurationProviderFa
 
     private static final String KEY_CONFIG_DB_USER = "db.user";
 
-    private static final String KEY_CONFIG_DB_PASSWPRD = "db.password";
+    private static final String KEY_CONFIG_DB_PASSWORD = "db.password";
+
+    private static final String KEY_CONFIG_DB_TABLE = "db.table";
 
     private enum ConfigType {
         git, consul, file, database
@@ -89,7 +89,28 @@ public class ConfigurationProviderFactoryImpl implements ConfigurationProviderFa
     }
 
     private ConfigurationProvider newDatabaseConfigurationProvider(Properties prop) {
-        return null;
+        String driver = prop.getProperty(KEY_CONFIG_DB_DRIVER);
+        String url = prop.getProperty(KEY_CONFIG_DB_URL);
+        String user = prop.getProperty(KEY_CONFIG_DB_USER);
+        String password = prop.getProperty(KEY_CONFIG_DB_PASSWORD);
+        String table = prop.getProperty(KEY_CONFIG_DB_TABLE);
+
+        String project = prop.getProperty(KEY_CONFIG_PROJECT);
+        String profile = prop.getProperty(KEY_CONFIG_PROFILE);
+
+        if (notEmpty(driver) && notEmpty(url) && notEmpty(user) && notEmpty(password)) {
+
+            if (isEmpty(table))
+                table = "TB_CONFIG";
+
+            if (isEmpty(profile))
+                profile = "default";
+
+            ConfigurationSource source = new DatabaseConfigurationSource(driver, url, user, password, table, project);
+            return createProvider(source, profile);
+        }
+
+        throw new IllegalArgumentException("illegal origin config");
     }
 
     /**
@@ -120,19 +141,7 @@ public class ConfigurationProviderFactoryImpl implements ConfigurationProviderFa
         if (profile != null && profile.length() > 0)
             envStr += "/" + profile;
 
-        Environment environment = new ImmutableEnvironment(envStr);
-
-        ProviderAwareConfigurationSource sourceWrapper = new ProviderAwareConfigurationSource(source);
-
-        ConfigurationProvider provider = new ConfigurationProviderBuilder()
-            .withConfigurationSource(sourceWrapper)
-            .withEnvironment(environment)
-            .withReloadStrategy(new PeriodicalReloadStrategy(15, TimeUnit.SECONDS))
-            .build();
-
-        sourceWrapper.setConfigurationProvider(provider);
-
-        return provider;
+        return createProvider(source, envStr);
     }
 
     private ConfigurationProvider newGitConfigurationProvider(Properties prop) {
@@ -153,7 +162,11 @@ public class ConfigurationProviderFactoryImpl implements ConfigurationProviderFa
             .withConfigFilesProvider(configFilesProvider)
             .build();
 
-        Environment environment = new ImmutableEnvironment(configBranch);
+        return createProvider(source, configBranch);
+    }
+
+    private ConfigurationProvider createProvider(ConfigurationSource source, String profile) {
+        Environment environment = new ImmutableEnvironment(profile);
 
         ProviderAwareConfigurationSource sourceWrapper = new ProviderAwareConfigurationSource(source);
 
@@ -168,5 +181,12 @@ public class ConfigurationProviderFactoryImpl implements ConfigurationProviderFa
         return provider;
     }
 
+    private boolean isEmpty(String str) {
+        return str == null || str.length() == 0;
+    }
+
+    private boolean notEmpty(String str) {
+        return !isEmpty(str);
+    }
 
 }
