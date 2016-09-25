@@ -32,16 +32,7 @@ public class ConfigurationBeanDefinitionParser extends AbstractSingleBeanDefinit
 
     @Override
     protected void doParse(Element element, ParserContext parserContext, BeanDefinitionBuilder builder) {
-        String configKey = element.getAttribute(KEY);
-        if (configKey == null || configKey.length() == 0) {
-            configKey = KEY_DEFAULT_VALUE;
-            log.info("use default config key: {}", configKey);
-        }
-
-        String configFile = System.getProperty(configKey, DEFAULT_CONFIG_FILE_NAME);
-        log.info("read origin config from file '{}' in classpath", configFile);
-
-        Properties prop = loadProperties(configFile);
+        Properties prop = loadProperties(getConfigFile(element.getAttribute(KEY)));
         log.info("origin config: {}", prop);
 
         ConfigurationProvider provider = new ConfigurationProviderFactoryImpl().create(prop);
@@ -51,20 +42,37 @@ public class ConfigurationBeanDefinitionParser extends AbstractSingleBeanDefinit
 
         // 设置 Cfg4jPropertyPlaceholderConfigurer 相关属性
         builder.addPropertyValue("configurationProvider", provider);
+    }
 
-        // 用于当配置的占位符，没有给到属性值时报警
-        builder.addPropertyValue("ignoreUnresolvablePlaceholders",
-            Boolean.valueOf(element.getAttribute("ignore-unresolvable")));
+    private String getConfigFile(String configKey) {
+        if (configKey == null || configKey.length() == 0) {
+            configKey = KEY_DEFAULT_VALUE;
+            log.info("use default config key: {}", configKey);
+        }
+
+        String configFile = System.getProperty(configKey);
+        if (configFile == null || configFile.length() == 0) {
+            log.info("cannot file 'configFile' in system properties");
+            configFile = System.getenv(configKey);
+
+            if (configFile == null || configFile.length() == 0) {
+                log.info("cannot file 'configFile' in system env, use default config file: {}", DEFAULT_CONFIG_FILE_NAME);
+                configFile = DEFAULT_CONFIG_FILE_NAME;
+            }
+        }
+
+        log.info("read origin config from file '{}' in classpath", configFile);
+        return configFile;
     }
 
     private void registerConfigurationProvider(ParserContext parserContext, ConfigurationProvider provider) {
-        log.info("register [configurationProvider] to spring");
+        log.info("register [cfg4jConfigurationProvider] to spring");
 
         // 通过工厂方法静态类,避开 Spring 无法直接注册一个对象实例的问题
         ConfigurationProviderFactoryBean.providerHolder.set(provider);
 
         BeanDefinition configurationProviderFactoryBean = BeanDefinitionBuilder.rootBeanDefinition(ConfigurationProviderFactoryBean.class).getBeanDefinition();
-        parserContext.getRegistry().registerBeanDefinition("configurationProvider", configurationProviderFactoryBean);
+        parserContext.getRegistry().registerBeanDefinition("cfg4jConfigurationProvider", configurationProviderFactoryBean);
     }
 
 

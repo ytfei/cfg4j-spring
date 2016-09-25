@@ -14,6 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
@@ -51,8 +54,19 @@ public class ConfigurationProviderFactoryImpl implements ConfigurationProviderFa
 
     private static final String DEFAULT_CONFIG_FILES = "config.properties";
 
+    /**
+     * 数据库配置源 所需要的 配置项
+     */
+    private static final String KEY_CONFIG_DB_DRIVER = "db.driver";
+
+    private static final String KEY_CONFIG_DB_URL = "db.url";
+
+    private static final String KEY_CONFIG_DB_USER = "db.user";
+
+    private static final String KEY_CONFIG_DB_PASSWPRD = "db.password";
+
     private enum ConfigType {
-        git, consul, file
+        git, consul, file, database
     }
 
     @Override
@@ -67,9 +81,15 @@ public class ConfigurationProviderFactoryImpl implements ConfigurationProviderFa
                 throw new UnsupportedOperationException("consul backend is not supported yet");
             case file:
                 return newLocalFileConfigurationProvider(prop);
+            case database:
+                return newDatabaseConfigurationProvider(prop);
             default:
                 throw new UnsupportedOperationException(type + " backend is not supported yet");
         }
+    }
+
+    private ConfigurationProvider newDatabaseConfigurationProvider(Properties prop) {
+        return null;
     }
 
     /**
@@ -147,4 +167,6 @@ public class ConfigurationProviderFactoryImpl implements ConfigurationProviderFa
 
         return provider;
     }
+
+
 }
